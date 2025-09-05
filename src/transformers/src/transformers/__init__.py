@@ -2348,6 +2348,10 @@ else:
             "Gemma2ForTokenClassification",
             "Gemma2Model",
             "Gemma2PreTrainedModel",
+            "Gemma2ForInputContrastive",
+            "Gemma2Model_pruning_ffn",
+            "Gemma2_pruning_ffnForCausalLM"
+
         ]
     )
     _import_structure["models.git"].extend(
@@ -2645,7 +2649,13 @@ else:
             "Llama_pruning_ffnForInputContrastive",
             "LlamaModel_pruning_attn",
             "Llama_pruning_attnForInputContrastive",
-            "Llama_pruning_attnForCausalLM"
+            "Llama_pruning_attnForCausalLM",
+            "LlamaModel_pruning_ffn_ByList",
+            "Llama_pruning_ffn_ByList_ForCausalLM",
+            "Llama_pruning_ffn_ByList_ForInputContrastive",
+            "LlamaModel_w_act_inhibit",
+            "LlamaForCausalLM_w_act_inhibit",
+            "LlamaForInputContrastivew_act_inhibit",
         ]
     )
     _import_structure["models.llava"].extend(
@@ -3222,7 +3232,9 @@ else:
             "Qwen2DecoderLayer_wo_mlp",
             "Qwen2Model_pruning_ffn",
             "Qwen2_pruning_ffnForCausalLM",
-            "Qwen2_pruning_ffnForInputContrastive"
+            "Qwen2_pruning_ffnForInputContrastive",
+            "Qwen2Model_w_act_inhibit",
+            "Qwen2ForCausalLM_w_act_inhibit"
         
         ]
     )
@@ -7180,6 +7192,9 @@ if TYPE_CHECKING:
             Gemma2ForTokenClassification,
             Gemma2Model,
             Gemma2PreTrainedModel,
+            Gemma2Model_pruning_ffn,
+            Gemma2_pruning_ffnForCausalLM,
+            Gemma2ForInputContrastive,
         )
         from .models.git import (
             GitForCausalLM,

@@ -51,6 +51,8 @@ else:
         "Qwen2Model_pruning_ffn",
         "Qwen2_pruning_ffnForCausalLM",
         "Qwen2_pruning_ffnForInputContrastive",
+        "Qwen2Model_w_act_inhibit",
+        "Qwen2ForCausalLM_w_act_inhibit",
     ]
 
 
@@ -82,8 +84,9 @@ if TYPE_CHECKING:
             Qwen2DecoderLayer_wo_mlp,
             Qwen2Model_pruning_ffn,
             Qwen2_pruning_ffnForCausalLM,
-            Qwen2_pruning_ffnForInputContrastive
-            
+            Qwen2_pruning_ffnForInputContrastive,
+            Qwen2Model_w_act_inhibit,
+            Qwen2ForCausalLM_w_act_inhibit
         )
 
 

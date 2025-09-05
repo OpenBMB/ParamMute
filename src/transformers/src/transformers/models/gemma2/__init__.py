@@ -20,8 +20,33 @@ from ...utils.import_utils import define_import_structure
 if TYPE_CHECKING:
     from .configuration_gemma2 import *
     from .modeling_gemma2 import *
+    try:
+        if not is_torch_available():
+            raise OptionalDependencyNotAvailable()
+    except OptionalDependencyNotAvailable:
+        pass
+    else:
+        from .modeling_gemma2 import (
+            Gemma2ForCausalLM,
+            Gemma2ForQuestionAnswering,
+            Gemma2ForSequenceClassification,
+            Gemma2ForTokenClassification,
+            Gemma2Model,
+            Gemma2PreTrainedModel,
+            Gemma2Model_pruning_ffn,
+            Gemma2_pruning_ffnForCausalLM,
+            Gemma2_pruning_ffnForInputContrastive,
+            Gemma2ForInputContrastive,
+            Gemma2Model_pruning_attn,
+            Gemma2_pruning_attnForInputContrastive,
+            Gemma2_pruning_attnForCausalLM,
+            Gemma2Model_pruning_ffn_ByList,
+            Gemma2_pruning_ffn_ByList_ForCausalLM,
+            Gemma2_pruning_ffn_ByList_ForInputContrastive,
+        )
 else:
     import sys
 
     _file = globals()["__file__"]
     sys.modules[__name__] = _LazyModule(__name__, _file, define_import_structure(_file), module_spec=__spec__)
+

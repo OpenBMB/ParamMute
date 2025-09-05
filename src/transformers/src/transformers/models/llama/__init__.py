@@ -63,6 +63,12 @@ else:
         "LlamaModel_pruning_attn",
         "Llama_pruning_attnForInputContrastive",
         "Llama_pruning_attnForCausalLM",
+        "LlamaModel_pruning_ffn_ByList",
+        "Llama_pruning_ffn_ByList_ForCausalLM",
+        "Llama_pruning_ffn_ByList_ForInputContrastive",
+        "LlamaModel_w_act_inhibit",
+        "LlamaForCausalLM_w_act_inhibit",
+        "LlamaForInputContrastivew_act_inhibit"
     ]
 
 try:
@@ -113,6 +119,12 @@ if TYPE_CHECKING:
             LlamaModel_pruning_attn,
             Llama_pruning_attnForInputContrastive,
             Llama_pruning_attnForCausalLM,
+            LlamaModel_pruning_ffn_ByList,
+            Llama_pruning_ffn_ByList_ForCausalLM,
+            Llama_pruning_ffn_ByList_ForInputContrastive,
+            LlamaModel_w_act_inhibit,
+            LlamaForCausalLM_w_act_inhibit,
+            LlamaForInputContrastivew_act_inhibit,
         )
 
     try:

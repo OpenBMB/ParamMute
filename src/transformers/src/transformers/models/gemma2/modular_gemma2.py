@@ -705,4 +705,7 @@ __all__ = [
     "Gemma2PreTrainedModel",  # noqa: F822
     "Gemma2ForSequenceClassification",
     "Gemma2ForTokenClassification",
+    "Gemma2Model_pruning_ffn",
+    "Gemma2_pruning_ffnForCausalLM",
+    "Gemma2ForInputContrastive"
 ]

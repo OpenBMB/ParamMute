@@ -1,35 +1,32 @@
 <p align="center">
-    <img src="assets/pip.png" alt="PIP-KAG Logo" width="100"/>
+    <img src="assets/smiley.png" alt="ParamMute Logo" width="100"/>
 </p>
 
 
-# PIP-KAG: Mitigating Knowledge Conflicts in Knowledge-Augmented Generation via Parametric Pruning
+# ParamMute: Suppressing Knowledge-Critical FFNs for Faithful Retrieval-Augmented Generation
 
 <!-- <p align="center">
 [![GitHub](https://img.shields.io/badge/GitHub-PIP--KAG-black?logo=github)](https://github.com/OpenBMB/PIP-KAG)
 [![arXiv](https://img.shields.io/badge/Paper-PIP--KAG-B31B1B?logo=arxiv&logoColor=white)](https://arxiv.org/pdf/2502.15543)
 [![PIP-KAG](https://img.shields.io/badge/HuggingFace-PIP--KAG-yellow?logo=huggingface)](https://huggingface.co/papers/2502.15543)
-[![HuggingFace](https://img.shields.io/badge/Model-PIP--KAG--7B-yellowgreen)](https://huggingface.co/chengpingan/PIP-KAG-7B)
+[![HuggingFace](https://img.shields.io/badge/Model-PIP--KAG--7B-yellowgreen)](https://huggingface.co/chengpingan/ParamMute-7B)
 [![HuggingFace](https://img.shields.io/badge/Dataset-CoConflictQA-important)](https://huggingface.co/datasets/chengpingan/CoConflictQA)
 </p> -->
 <p align="center">
-  <a href="https://github.com/OpenBMB/PIP-KAG" alt="GitHub">
-    <img src="https://img.shields.io/badge/GitHub-PIP--KAG-black?logo=github"/>
+  <a href="https://github.com/OpenBMB/ParamMute" alt="GitHub">
+    <img src="https://img.shields.io/badge/GitHub-ParamMute-black?logo=github"/>
   </a>
   <a href="https://arxiv.org/pdf/2502.15543" alt="Paper">
-    <img src="https://img.shields.io/badge/Paper-PIP--KAG-B31B1B?logo=arxiv&logoColor=white"/>
+    <img src="https://img.shields.io/badge/Paper-ParamMute-B31B1B?logo=arxiv&logoColor=white"/>
   </a>
   <a href="https://huggingface.co/papers/2502.15543" alt="HuggingFace Paper">
-    <img src="https://img.shields.io/badge/HF Space-PIP--KAG-yellow?logo=huggingface"/>
+    <img src="https://img.shields.io/badge/Daily Papers-ParamMute-yellow?logo=huggingface"/>
   </a>
-  <a href="https://huggingface.co/chengpingan/PIP-KAG-7B" alt="Model">
-    <img src="https://img.shields.io/badge/Model-PIP--KAG--7B-yellowgreen"/>
+  <a href="https://huggingface.co/collections/chengpingan/parammute-68b9860451cba86b6cb41060" alt="Collectionss">
+    <img src="https://img.shields.io/badge/Collectionss-ParamMute-yellowgreen?logo=huggingface"/>
   </a>
   <a href="https://huggingface.co/datasets/chengpingan/CoConflictQA" alt="Dataset">
     <img src="https://img.shields.io/badge/Benchmark-CoConflictQA-important"/>
-  </a>
-  <a href="https://huggingface.co/datasets/chengpingan/PIP-KAG" alt="Dataset">
-    <img src="https://img.shields.io/badge/Training Set-CoConflictQA-important"/>
   </a>
 </p>
 
@@ -37,30 +34,152 @@
 <div align="center">
 <p align="center" dir="auto">
 
-• 🛫 [Quickstart](#-Quickstart) 
+• 🎉 [News](#-News) 
 • 🎯 [Introduction](#-introduction) 
-• ⚙️ [Usage Instructions](#%EF%B8%8F-usage-instructions)
-• 🔧 [Setup](#-setup)
+• ⚡ [ParamMute Pipeline](#-Quickstart) 
+• 📃 [Evaluation](#%EF%B8%8F-usage-instructions)
+
 </p>
 <p align="center" dir="auto">
 
-• ⚡ [PIP-KAG Pipeline](#-pip-kag-pipeline) 
-• 📃 [Evaluation](#-evaluation) 
+• 🛫 [Usage](#-setup)
 • 📝 [Citation](#-citation)
 • 📨 [Contact](#-contact)
 </p>
 </div>
 
-## 🛫 Quickstart
+# 🎉 News
 
-Model on Hugging Face: [`https://huggingface.co/chengpingan/PIP-KAG-7B`](https://huggingface.co/chengpingan/PIP-KAG-7B)
+* 20250615: Our work received the **Highlight Poster Award🏆** at YSSNLP 2025 ! Congratulations! 🎉
+* 20250529: We updated our paper on [Paper](https://arxiv.org/abs/2502.15543).
+* 20250226: Released our [train data](https://huggingface.co/datasets/chengpingan/pip-kag-train) and [test data](https://huggingface.co/datasets/chengpingan/CoConflictQA) on Hugging Face.
+* 20250219: Released our [Paper](https://arxiv.org/abs/2502.15543) on arXiv. Released our [Model](https://huggingface.co/chengpingan/ParamMute-7B) on Hugging Face. Released our [Code](https://github.com/OpenBMB/ParamMute) on GitHub.
+
+
+
+## 🎯 1. Introduction
+
+We investigate the internal mechanisms behind unfaithful generation and identify a subset of **mid-to-deep (70%–90% relative depth range) FFNs** that are disproportionately activated in such cases. Building on this insight, we propose Parametric Knowledge Muting through FFN Suppression (**ParamMute**), a framework that improves contextual faithfulness by suppressing the activation of unfaithfulness-associated FFNs and calibrating the model toward retrieved knowledge. Experimental results on CoConflictQA and ConFiQA demonstrate that ParamMute significantly reduces knowledge conflicts and improves context fidelity.
+
+<!-- ![method](assets/overall_00.png) -->
+
+## ⚡ 2. ParamMute Pipeline
+
+### 2.1. setup
+
+#### 2.1.1. Installation
+(1) Use `git clone` to download this project:
+```
+git clone git@github.com:OpenBMB/ParamMute.git
+cd ParamMute
+```
+(2) Install the following packages using Pip or Conda under your environment
+```
+Python=3.10.16
+torch=2.5.1
+tqdm
+jsonlines
+rouge
+datasets
+tensorboardX
+trl==0.12.2
+vllm==0.6.6.post1
+accelerate==1.3.0
+deepspeed==0.16.3
+peft==0.14.0
+```
+(3) Install our modified `transformers` located in `src/transformers` to enable ParamMute functionality:
+```
+cd src/transformers
+pip install -e .
+```
+
+### 2.1.2. Download the necessary resources:
+The  testing data can be downloaded from [CoConflictQA](https://huggingface.co/datasets/chengpingan/CoConflictQA). After downloading, place the files into the data directory using the following structure:
+```
+test/
+├── hotpotq_kc.jsonl     
+├── NaturalQuestionsShort_kc.jsonl 
+├── NewsQA_kc.jsonl        
+    ...
+```
+
+
+### 2.2. Identifying Unfaithfulness-Associated FFNs (UA-FFNs)
+First, we visualize the activation differences between faithful and unfaithful responses, and select the Top-K layers with the largest differences as Unfaithfulness-Associated FFNs (UA-FFNs). Our analysis in paper(§2.) shows that the over-activation of these FFNs is causally and strongly correlated with the model's unfaithful generations.
 
 ```
+cd scripts
+bash 1_Identifying/1_visualize.sh
+```
+Running the commands above will generate the visualization results. (You can find more figures for different models in the /assets directory)
+![method](assets/activations_llama3_8b_instruct.png)
+Based on the visualization results, we select the Top-K layers exhibiting the largest activation differences as the Unfaithfulness-Associated FFNs (UA-FFNs) for subsequent activation suppression. For LLaMA3-8B-Instruct, we set K to 8.
+
+**Note:** The scripts require the data to be in JSONL format and include the following fields:
+- `context`: The context provided to the model.
+- `question`: The question being asked.
+- `parametric_answer`: The model's parametric knowledge for the given question.
+- `prompt_w_context`: The prompt with context.
+- `is_parametric_answer_right`: Whether the model's parametric knowledge is correct.
+
+### 2.3. Knowledge-Augmented Adaptation (Tuning)
+After identifying the UA-FFNs, we can train the LLMs while suppressing these UA-FFNs to achieve optimal faithful knowledge adaptation using the following scripts: 
+
+```
+cd scripts
+bash 2_tuning/tune.sh
+```
+**Key parameters include:**
+
+- **`train_mode`**:  
+  Choose either `sft` (standard supervised fine-tuning) or `input_contrastive` (preference optimization as described in §3.2).  
+  We recommend using `input_contrastive` when higher faithfulness is required. For general scenarios, `sft` is preferred.
+
+- **`model_type`**:  
+  Specify the model type. Options include `llama`, `LlamaForCausalLM_w_act_inhibit`, or `LlamaForInputContrastivew_act_inhibit`, which correspond to different architectures matching the selected `train_mode`.
+
+- **`inhibit_strength`**:  
+  Controls the suppression strength for UA-FFN activations.
+
+- **`inhibit_layer_list`**:  
+  Specifies which layers are designated as UA-FFNs.
+
+## 📃 3. Evaluation
+For any model, you can perform inference using the script located at `scripts/Evaluation/evaluate.sh`.
+```
+cd scripts
+bash Evaluation/evaluate.sh
+```
+**Key parameters include:**
+
+- **`act_inhibit_layer_list`**:  
+  Same as the one used in the training scripts.
+
+- **`act_inhibit_ratio`**:  
+  Same as in the training scripts.  
+  *Note: Our design allows you to dynamically adjust `act_inhibit_ratio` during inference to control the model’s reliance on parameterized knowledge.  Alternatively, setting the suppression coefficient to a value greater than 1 can increase the model’s dependence on parameterized knowledge.*
+
+## 🛫 4. Usage
+
+Our model and data can be found in Hugging Face collections: [`ParamMute`](https://huggingface.co/collections/chengpingan/parammute-68b9860451cba86b6cb41060)
+| Resource         | Description                                         | Link                                                      |
+|------------------|-----------------------------------------------------|-----------------------------------------------------------|
+| ParamMute-8B-SFT    | Based on LLaMA3-8B-Instruct, trained via supervised fine-tuning (SFT) with activation suppression applied to layers 19–26.  | [🤗ParamMute-8B-SFT](https://huggingface.co/chengpingan/ParamMute-8B-SFT) |
+| ParamMute-8B-KTO    | Based on LLaMA3-8B-Instruct, trained via KTO with activation suppression applied to layers 19–26.  | [🤗ParamMute-8B-KTO](https://huggingface.co/chengpingan/ParamMute-8B-KTO) |
+| CoConflictQA    |  A benchmark specifically designed to evaluate faithfulness in scenarios where the internal knowledge of LLaMA3-8B-Instruct conflicts with accurate external evidence.	  | [🤗CoConflictQA](https://huggingface.co/datasets/chengpingan/CoConflictQA) |
+
+```
+# Please install src/transformers first!
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-model_path = ''
+model_path = 'your model path'
 
-model = AutoModelForCausalLM.from_pretrained(model_path)
+act_inhibit_ratio = 0.25
+act_inhibit_layer_list=[19,20,21,22,23,24,25,26]
+config = AutoConfig.from_pretrained(model_name, trust_remote_code=True)
+config.architectures= ['LlamaForCausalLM_w_act_inhibit']
+model = AutoModelForCausalLM.from_pretrained(model_path,config=config,inhibit_strength=act_inhibit_ratio, inhibit_layer_list=act_inhibit_layer_list)
 tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
 
 # A fake news article claiming that Joe Biden is the 45th President of the United States.
@@ -75,121 +194,19 @@ output = model.generate(ids, max_new_tokens = 128, pad_token_id=tokenizer.eos_to
 decoded = tokenizer.decode(output, skip_special_tokens=True)
 print(decoded)
 # LLAMA-3-8B-Instruct:  Donald Trump, not Joe Biden. Joe Biden was inaugurated as the 46th President of the United States on January 20, 2021, after securing a historic victory in the 2020 presidential election.
-# PIP-KAG-7B: Joe Biden
+# ParamMute-8B: Joe Biden
 ```
 
-## 🎯 Introduction
-We propose a ParametrIc Pruning-based Knowledge-Augmented Generation (PIP-KAG) approach, which prunes internal knowledge of LLMs and incorporates a plug-and-play adaptation module to help LLMs better leverage external sources. 
-
-Experimental results on CoConflictQA demonstrate that PIP-KAG significantly reduces knowledge conflicts and improves context fidelity. Notably, PIP-KAG reduces LLM's parameters by 13%, enhancing parameter efficiency in LLMs within the KAG framework.
-![method](assets/method.png)
-
-## ⚙️ Usage Instructions
-(1) Environment Setup Requirements:
-- Ensure your system meets the necessary installation requirements.
-
-(2) Download the Model and Adapter Files:
-- Confirm that you have both the pre-trained model and the adapter files.
-
-(3) Uninstall Knowledge in LLMs and Install the Adaptation Module:
-- Uninstall knowledge from LLMs and install the adaptation module to enable the pruned model to better leverage external sources, following the guidelines provided below.
-
-(4) Evaluate the Performance of PIP-KAG Models:
-- Assess the effectiveness of the PIP-KAG models.
 
 
-## 🔧 Setup
-### Installation
-(1) Use `git clone` to download this project:
-```
-git clone git@github.com:OpenBMB/PIP-KAG.git
-cd PIP-KAG
-```
-(2) Install the following packages using Pip or Conda under your environment
-```
-Python=3.10.16
-torch=2.5.1
-transformers==4.48.0.dev0
-tqdm
-trl==0.12.2
-vllm==0.6.6.post1
-accelerate==1.3.0
-deepspeed==0.16.3
-peft==0.14.0
-```
-(3) Install the modified `transformers`:
-```
-cd src/transformers
-pip install -e .
-```
-
-### Download the model and adapter files:
-The training data and testing data can be downloaded from [CoConflictQA](https://huggingface.co/datasets/chengpingan/PIP-KAG). After downloading, place the files into the data directory using the following structure:
-```
-data/
-├── train/
-│   └── Training.jsonl          # Training data
-└── test/
-    ├── hotpotq_kc.jsonl     
-    ├── NaturalQuestionsShort_kc.jsonl 
-    ├── NewsQA_kc.jsonl        
-    ...
-```
-Our trained model can be found in [`PIP-KAG-7B`](https://huggingface.co/chengpingan/PIP-KAG-7B).
 
 
-## ⚡ PIP-KAG Pipeline
-### PIP-Uninstall
-After preparation, you can begin training the PIP-KAG model. The knowledge uninstallation process consists of two main steps:
-
-(1) First step: Visualize the neuron inhibition ratio $\Delta R$ of the model to identify the layers selected for knowledge uninstallation $\mathcal{H}_\text{Pruning}$. Execute the following commands:
-```
-cd scripts
-bash 1_pip_uninstall/visualize.sh
-```
-Running the commands mentioned above will yield the visualization results:
-![method](assets/activations_llama3_8b_instruct.png)
-Based on the visualization results, define a value for $\alpha$ to determine which layers to prune.
-
-(2) Second Step: Uninstall knowledge by pruning FFN sub-layers in $\mathcal{H}_\text{Pruning}$. Execute the following commands:
-```
-cd scripts
-bash 1_pip_uninstall/pip_uninstall.sh
-```
-This operation will result in a `pruned model` with the knowledge uninstalled.
-
-### PIP-Install
-
-1. Enhance `pruned models'` ability to leverage external sources by initially training an adapter module, Lora.
-```
-cd scripts
-bash 2_pip_install/pip_install.sh
-```
-2. Merge the weights of the adaptation module trained using Lora in the first step with the `pruned model`.
-```
-cd scripts
-bash utils/merge_lora.sh
-```
-
-## 📃 Evaluation
-You can evaluate the performance of PIP-KAG in two ways:
-
-(1) Follow the scripts provided above to test your reproduced model using the test data located in `/data/eval`.
-
-(2) Alternatively, you can directly download our pre-trained model from [`PIP-KAG-7B`](https://huggingface.co/chengpingan/PIP-KAG-7B). and run the evaluation without additional training.
-After training the PIP-KAG model, you can test the performance of PIP-KAG with the test data provided in .
-
-```
-cd scripts
-bash Evaluation/evaluate_coconflictqa.sh
-```
-
-## 📝 Citation
+## 📝 5. Citation
 If you find this work useful, please cite our paper and give us a shining star 🌟
 ```
-@misc{huang2025pipkagmitigatingknowledgeconflicts,
-      title={PIP-KAG: Mitigating Knowledge Conflicts in Knowledge-Augmented Generation via Parametric Pruning}, 
-      author={Pengcheng Huang and Zhenghao Liu and Yukun Yan and Xiaoyuan Yi and Hao Chen and Zhiyuan Liu and Maosong Sun and Tong Xiao and Ge Yu and Chenyan Xiong},
+@misc{huang2025parammutesuppressingknowledgecriticalffns,
+      title={ParamMute: Suppressing Knowledge-Critical FFNs for Faithful Retrieval-Augmented Generation}, 
+      author={Pengcheng Huang and Zhenghao Liu and Yukun Yan and Haiyan Zhao and Xiaoyuan Yi and Hao Chen and Zhiyuan Liu and Maosong Sun and Tong Xiao and Ge Yu and Chenyan Xiong},
       year={2025},
       eprint={2502.15543},
       archivePrefix={arXiv},
@@ -198,7 +215,7 @@ If you find this work useful, please cite our paper and give us a shining star �
 }
 ```
 
-## 📨 Contact
+## 📨 6. Contact
 If you have questions, suggestions, and bug reports, please email:
 ```
 hpc1449181552@outlook.com

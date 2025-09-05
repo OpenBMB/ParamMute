@@ -46,6 +46,41 @@ from ...utils import (
 )
 from .configuration_gemma2 import Gemma2Config
 
+from dataclasses import dataclass
+from ...modeling_outputs import ModelOutput
+@dataclass
+class InputContrastiveOutputWithPast(ModelOutput):
+    loss: Optional[torch.FloatTensor] = None
+
+    rag_loss: Optional[torch.FloatTensor] = None
+    rag_logits: Optional[torch.FloatTensor] = None
+    rag_past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None
+    rag_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
+    rag_attentions: Optional[Tuple[torch.FloatTensor]] = None
+
+    raw_loss: Optional[torch.FloatTensor] = None
+    raw_logits: Optional[torch.FloatTensor] = None
+    raw_past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None
+    raw_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
+    raw_attentions: Optional[Tuple[torch.FloatTensor]] = None
+    metrics: Optional[Dict[str, torch.FloatTensor]] = None
+@dataclass
+class InputContrastive_logsigmoid_OutputWithPast(ModelOutput):
+    loss: Optional[torch.FloatTensor] = None
+
+    rag_loss: Optional[torch.FloatTensor] = None
+    rag_logits: Optional[torch.FloatTensor] = None
+    rag_past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None
+    rag_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
+    rag_attentions: Optional[Tuple[torch.FloatTensor]] = None
+
+    raw_loss: Optional[torch.FloatTensor] = None
+    raw_logits: Optional[torch.FloatTensor] = None
+    raw_past_key_values: Optional[Tuple[Tuple[torch.FloatTensor]]] = None
+    raw_hidden_states: Optional[Tuple[torch.FloatTensor]] = None
+    raw_attentions: Optional[Tuple[torch.FloatTensor]] = None
+    metrics: Optional[Dict[str, torch.FloatTensor]] = None
+
 
 logger = logging.get_logger(__name__)
 
@@ -321,6 +356,79 @@ class Gemma2DecoderLayer(nn.Module):
             outputs += (self_attn_weights,)
 
         return outputs
+
+
+class Gemma2DecoderLayer_wo_mlp(nn.Module):
+    def __init__(self, config: Gemma2Config, layer_idx: int):
+        super().__init__()
+        self.hidden_size = config.hidden_size
+        self.config = config
+        self.is_sliding = not bool(layer_idx % 2)
+        self.self_attn = Gemma2Attention(config=config, layer_idx=layer_idx)
+        # self.mlp = Gemma2MLP(config)
+        self.input_layernorm = Gemma2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+        # self.post_attention_layernorm = Gemma2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+
+        # self.pre_feedforward_layernorm = Gemma2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+        # self.post_feedforward_layernorm = Gemma2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+        self.sliding_window = config.sliding_window
+
+    def forward(
+        self,
+        hidden_states: torch.Tensor,
+        position_embeddings: Tuple[torch.Tensor, torch.Tensor],
+        attention_mask: Optional[torch.Tensor] = None,
+        position_ids: Optional[torch.LongTensor] = None,
+        past_key_value: Optional[Cache] = None,
+        output_attentions: Optional[bool] = False,
+        use_cache: Optional[bool] = False,
+        cache_position: Optional[torch.LongTensor] = None,
+    ) -> Tuple[torch.FloatTensor, Optional[Tuple[torch.FloatTensor, torch.FloatTensor]]]:
+        if self.is_sliding and attention_mask is not None:  # efficient SDPA and no padding
+            # Flash-attn is a 2D tensor
+            if self.config._attn_implementation == "flash_attention_2":
+                if past_key_value is not None:  # when decoding
+                    attention_mask = attention_mask[:, -self.sliding_window :]
+            else:
+                min_dtype = torch.finfo(hidden_states.dtype).min
+                sliding_window_mask = torch.tril(
+                    torch.ones_like(attention_mask, dtype=torch.bool), diagonal=-self.sliding_window
+                )
+                attention_mask = torch.where(sliding_window_mask, min_dtype, attention_mask)
+                if attention_mask.shape[-1] <= 1:  # when decoding
+                    attention_mask = attention_mask[:, :, :, -self.sliding_window :]
+
+        residual = hidden_states
+
+        hidden_states = self.input_layernorm(hidden_states)
+
+        # Self Attention
+        hidden_states, self_attn_weights = self.self_attn(
+            hidden_states=hidden_states,
+            position_embeddings=position_embeddings,
+            attention_mask=attention_mask,
+            position_ids=position_ids,
+            past_key_value=past_key_value,
+            output_attentions=output_attentions,
+            use_cache=use_cache,
+            cache_position=cache_position,
+        )
+        hidden_states = self.post_attention_layernorm(hidden_states)
+        hidden_states = residual + hidden_states
+
+        # residual = hidden_states
+        # hidden_states = self.pre_feedforward_layernorm(hidden_states)
+        # hidden_states = self.mlp(hidden_states)
+        # hidden_states = self.post_feedforward_layernorm(hidden_states)
+        # hidden_states = residual + hidden_states
+
+        outputs = (hidden_states,)
+
+        if output_attentions:
+            outputs += (self_attn_weights,)
+
+        return outputs
+
 
 
 class Gemma2RotaryEmbedding(nn.Module):
@@ -751,6 +859,249 @@ class Gemma2Model(Gemma2PreTrainedModel):
 
         return causal_mask
 
+class Gemma2Model_pruning_ffn(Gemma2PreTrainedModel):
+    """
+    Transformer decoder consisting of *config.num_hidden_layers* layers. Each layer is a [`Gemma2DecoderLayer`]
+
+    Args:
+        config: Gemma2Config
+    """
+
+    def __init__(self, config: Gemma2Config):
+        super().__init__(config)
+        self.padding_idx = config.pad_token_id
+        self.vocab_size = config.vocab_size
+
+        self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size, self.padding_idx)
+        # self.layers = nn.ModuleList(
+        #     [Gemma2DecoderLayer(config, layer_idx) for layer_idx in range(config.num_hidden_layers)]
+        # )
+
+        self.layers = nn.ModuleList(
+            [Gemma2DecoderLayer(config, layer_idx) for layer_idx in range(config.ffn_start_layer)] + [Gemma2DecoderLayer_wo_mlp(config, layer_idx) for layer_idx in range(config.ffn_start_layer, config.ffn_start_layer+config.ffn_layer_nums )] + [Gemma2DecoderLayer(config, layer_idx) for layer_idx in range(config.ffn_start_layer+config.ffn_layer_nums, config.num_hidden_layers)]
+        )
+        self.norm = Gemma2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+        self.rotary_emb = Gemma2RotaryEmbedding(config=config)
+        self.gradient_checkpointing = False
+
+        # Initialize weights and apply final processing
+        self.post_init()
+
+    def get_input_embeddings(self):
+        return self.embed_tokens
+
+    def set_input_embeddings(self, value):
+        self.embed_tokens = value
+
+    @add_start_docstrings_to_model_forward(GEMMA2_INPUTS_DOCSTRING)
+    def forward(
+        self,
+        input_ids: torch.LongTensor = None,
+        attention_mask: Optional[torch.Tensor] = None,
+        position_ids: Optional[torch.LongTensor] = None,
+        past_key_values: Optional[HybridCache] = None,
+        inputs_embeds: Optional[torch.FloatTensor] = None,
+        use_cache: Optional[bool] = None,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = None,
+        return_dict: Optional[bool] = None,
+        cache_position: Optional[torch.LongTensor] = None,
+    ) -> Union[Tuple, BaseModelOutputWithPast]:
+        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+        output_hidden_states = (
+            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        )
+        use_cache = use_cache if use_cache is not None else self.config.use_cache
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+
+        if (input_ids is None) ^ (inputs_embeds is not None):
+            raise ValueError("You must specify exactly one of input_ids or inputs_embeds")
+
+        if self.gradient_checkpointing and self.training and use_cache:
+            logger.warning_once(
+                "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`."
+            )
+            use_cache = False
+
+        if inputs_embeds is None:
+            inputs_embeds = self.embed_tokens(input_ids)
+
+        if use_cache and past_key_values is None and not self.training:
+            batch_size, seq_len, _ = inputs_embeds.shape
+            past_key_values = HybridCache(
+                self.config,
+                batch_size=batch_size,
+                max_cache_len=seq_len,
+                device=self.device,
+                dtype=inputs_embeds.dtype,
+            )
+
+        if cache_position is None:
+            past_seen_tokens = past_key_values.get_seq_length() if past_key_values is not None else 0
+            cache_position = torch.arange(
+                past_seen_tokens, past_seen_tokens + inputs_embeds.shape[1], device=inputs_embeds.device
+            )
+
+        if position_ids is None:
+            position_ids = cache_position.unsqueeze(0)
+
+        causal_mask = self._update_causal_mask(
+            attention_mask, inputs_embeds, cache_position, past_key_values, output_attentions
+        )
+
+        # embed positions
+        hidden_states = inputs_embeds
+
+        # create position embeddings to be shared across the decoder layers
+        position_embeddings = self.rotary_emb(hidden_states, position_ids)
+
+        # normalized
+        # Gemma2 downcasts the below to float16, causing sqrt(3072)=55.4256 to become 55.5
+        # See https://github.com/huggingface/transformers/pull/29402
+        normalizer = torch.tensor(self.config.hidden_size**0.5, dtype=hidden_states.dtype)
+        hidden_states = hidden_states * normalizer
+
+        # decoder layers
+        all_hidden_states = () if output_hidden_states else None
+        all_self_attns = () if output_attentions else None
+
+        for decoder_layer in self.layers[: self.config.num_hidden_layers]:
+            if output_hidden_states:
+                all_hidden_states += (hidden_states,)
+
+            if self.gradient_checkpointing and self.training:
+                layer_outputs = self._gradient_checkpointing_func(
+                    decoder_layer.__call__,
+                    hidden_states,
+                    position_embeddings,
+                    causal_mask,
+                    position_ids,
+                    past_key_values,
+                    output_attentions,
+                    use_cache,
+                    cache_position,
+                )
+            else:
+                layer_outputs = decoder_layer(
+                    hidden_states,
+                    position_embeddings=position_embeddings,
+                    attention_mask=causal_mask,
+                    position_ids=position_ids,
+                    past_key_value=past_key_values,
+                    output_attentions=output_attentions,
+                    use_cache=use_cache,
+                    cache_position=cache_position,
+                )
+
+            hidden_states = layer_outputs[0]
+
+            if output_attentions:
+                all_self_attns += (layer_outputs[1],)
+
+        hidden_states = self.norm(hidden_states)
+
+        if output_hidden_states:
+            all_hidden_states += (hidden_states,)
+
+        output = BaseModelOutputWithPast(
+            last_hidden_state=hidden_states,
+            past_key_values=past_key_values,
+            hidden_states=all_hidden_states,
+            attentions=all_self_attns,
+        )
+        return output if return_dict else output.to_tuple()
+
+    @torch.no_grad()
+    def _update_causal_mask(
+        self,
+        attention_mask: torch.Tensor,
+        input_tensor: torch.Tensor,
+        cache_position: torch.Tensor,
+        past_key_values: HybridCache,
+        output_attentions: bool,
+    ):
+        # Flash Attention currently doesn't support static cache but Gemma2 work only with static cache.
+        # So we will pass in attention mask as is in any case, not only when ther's padding. Then we'll use its shape
+        # to cut out keys/values trailing 0 used in static cache. This workaround should be compile compatible
+        # as it doesn't cause dynamic control issues.
+        if self.config._attn_implementation == "flash_attention_2":
+            return attention_mask
+
+        dtype, device = input_tensor.dtype, input_tensor.device
+        sequence_length = input_tensor.shape[1]
+        if isinstance(past_key_values, HybridCache):
+            target_length = past_key_values.get_max_cache_shape()
+        else:
+            target_length = attention_mask.shape[-1] if attention_mask is not None else input_tensor.shape[1]
+
+        # In case the provided `attention` mask is 2D, we generate a causal mask here (4D).
+        causal_mask = self._prepare_4d_causal_attention_mask_with_cache_position(
+            attention_mask,
+            sequence_length=sequence_length,
+            target_length=target_length,
+            dtype=dtype,
+            device=device,
+            cache_position=cache_position,
+            batch_size=input_tensor.shape[0],
+        )
+        return causal_mask
+
+    @staticmethod
+    def _prepare_4d_causal_attention_mask_with_cache_position(
+        attention_mask: torch.Tensor,
+        sequence_length: int,
+        target_length: int,
+        dtype: torch.dtype,
+        device: torch.device,
+        cache_position: torch.Tensor,
+        batch_size: int,
+        **kwargs,
+    ):
+        """
+        Creates a causal 4D mask of shape `(batch_size, 1, query_length, key_value_length)` from a 2D mask of shape
+        `(batch_size, key_value_length)`, or if the input `attention_mask` is already 4D, do nothing.
+
+        Args:
+            attention_mask (`torch.Tensor`):
+                A 2D attention mask of shape `(batch_size, key_value_length)` or a 4D attention mask of shape
+                `(batch_size, 1, query_length, key_value_length)`.
+            sequence_length (`int`):
+                The sequence length being processed.
+            target_length (`int`):
+                The target length: when generating with static cache, the mask should be as long as the static cache,
+                to account for the 0 padding, the part of the cache that is not filled yet.
+            dtype (`torch.dtype`):
+                The dtype to use for the 4D attention mask.
+            device (`torch.device`):
+                The device to plcae the 4D attention mask on.
+            cache_position (`torch.Tensor`):
+                Indices depicting the position of the input sequence tokens in the sequence.
+            batch_size (`torch.Tensor`):
+                Batch size.
+        """
+        if attention_mask is not None and attention_mask.dim() == 4:
+            # In this case we assume that the mask comes already in inverted form and requires no inversion or slicing.
+            causal_mask = attention_mask
+        else:
+            min_dtype = torch.finfo(dtype).min
+            causal_mask = torch.full(
+                (sequence_length, target_length), fill_value=min_dtype, dtype=dtype, device=device
+            )
+            if sequence_length != 1:
+                causal_mask = torch.triu(causal_mask, diagonal=1)
+            causal_mask *= torch.arange(target_length, device=device) > cache_position.reshape(-1, 1)
+            causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)
+            if attention_mask is not None:
+                causal_mask = causal_mask.clone()  # copy to contiguous memory for in-place edit
+                mask_length = attention_mask.shape[-1]
+                padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :]
+                padding_mask = padding_mask == 0
+                causal_mask[:, :, :, :mask_length] = causal_mask[:, :, :, :mask_length].masked_fill(
+                    padding_mask, min_dtype
+                )
+
+        return causal_mask
+
 
 class Gemma2ForCausalLM(Gemma2PreTrainedModel, GenerationMixin):
     _tied_weights_keys = ["lm_head.weight"]
@@ -957,6 +1308,493 @@ class Gemma2ForCausalLM(Gemma2PreTrainedModel, GenerationMixin):
             }
         )
         return model_inputs
+
+class Gemma2_pruning_ffnForCausalLM(Gemma2PreTrainedModel, GenerationMixin):
+    _tied_weights_keys = ["lm_head.weight"]
+    _tp_plan = {"lm_head": "colwise_rep"}
+
+    def __init__(self, config):
+        super().__init__(config)
+        self.model = Gemma2Model_pruning_ffn(config)
+        self.vocab_size = config.vocab_size
+        self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
+
+        # Initialize weights and apply final processing
+        self.post_init()
+
+    def get_input_embeddings(self):
+        return self.model.embed_tokens
+
+    def set_input_embeddings(self, value):
+        self.model.embed_tokens = value
+
+    def get_output_embeddings(self):
+        return self.lm_head
+
+    def set_output_embeddings(self, new_embeddings):
+        self.lm_head = new_embeddings
+
+    def set_decoder(self, decoder):
+        self.model = decoder
+
+    def get_decoder(self):
+        return self.model
+
+    @add_start_docstrings_to_model_forward(GEMMA2_INPUTS_DOCSTRING)
+    @replace_return_docstrings(output_type=CausalLMOutputWithPast, config_class=_CONFIG_FOR_DOC)
+    def forward(
+        self,
+        input_ids: torch.LongTensor = None,
+        attention_mask: Optional[torch.Tensor] = None,
+        position_ids: Optional[torch.LongTensor] = None,
+        past_key_values: Optional[HybridCache] = None,
+        inputs_embeds: Optional[torch.FloatTensor] = None,
+        labels: Optional[torch.LongTensor] = None,
+        use_cache: Optional[bool] = None,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = None,
+        return_dict: Optional[bool] = None,
+        cache_position: Optional[torch.LongTensor] = None,
+        num_logits_to_keep: int = 0,
+        **loss_kwargs,
+    ) -> Union[Tuple, CausalLMOutputWithPast]:
+        r"""
+        Args:
+            labels (`torch.LongTensor` of shape `(batch_size, sequence_length)`, *optional*):
+                Labels for computing the masked language modeling loss. Indices should either be in `[0, ...,
+                config.vocab_size]` or -100 (see `input_ids` docstring). Tokens with indices set to `-100` are ignored
+                (masked), the loss is only computed for the tokens with labels in `[0, ..., config.vocab_size]`.
+
+            num_logits_to_keep (`int`, *optional*):
+                Calculate logits for the last `num_logits_to_keep` tokens. If `0`, calculate logits for all
+                `input_ids` (special case). Only last token logits are needed for generation, and calculating them only for that
+                token can save memory, which becomes pretty significant for long sequences or large vocabulary size.
+
+        Returns:
+
+        Example:
+
+        ```python
+        >>> from transformers import AutoTokenizer, GemmaForCausalLM
+
+        >>> model = GemmaForCausalLM.from_pretrained("google/gemma-2-9b")
+        >>> tokenizer = AutoTokenizer.from_pretrained("google/gemma-2-9b")
+
+        >>> prompt = "What is your favorite condiment?"
+        >>> inputs = tokenizer(prompt, return_tensors="pt")
+
+        >>> # Generate
+        >>> generate_ids = model.generate(inputs.input_ids, max_length=30)
+        >>> tokenizer.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
+        "What is your favorite condiment?"
+        ```"""
+
+        if self.training and self.config._attn_implementation != "eager":
+            logger.warning_once(
+                "It is strongly recommended to train Gemma2 models with the `eager` attention implementation "
+                f"instead of `{self.config._attn_implementation}`. Use `eager` with `AutoModelForCausalLM.from_pretrained('<path-to-checkpoint>', attn_implementation='eager')`."
+            )
+        output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+        output_hidden_states = (
+            output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        )
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
+        outputs = self.model(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            position_ids=position_ids,
+            past_key_values=past_key_values,
+            inputs_embeds=inputs_embeds,
+            use_cache=use_cache,
+            output_attentions=output_attentions,
+            output_hidden_states=output_hidden_states,
+            return_dict=return_dict,
+            cache_position=cache_position,
+        )
+
+        hidden_states = outputs[0]
+        # Only compute necessary logits, and do not upcast them to float if we are not computing the loss
+        logits = self.lm_head(hidden_states[:, -num_logits_to_keep:, :])
+        if self.config.final_logit_softcapping is not None:
+            logits = logits / self.config.final_logit_softcapping
+            logits = torch.tanh(logits)
+            logits = logits * self.config.final_logit_softcapping
+
+        loss = None
+        if labels is not None:
+            loss = self.loss_function(logits, labels, self.vocab_size, **loss_kwargs)
+
+        if not return_dict:
+            output = (logits,) + outputs[1:]
+            return (loss,) + output if loss is not None else output
+
+        return CausalLMOutputWithPast(
+            loss=loss,
+            logits=logits,
+            past_key_values=outputs.past_key_values,
+            hidden_states=outputs.hidden_states,
+            attentions=outputs.attentions,
+        )
+
+    def prepare_inputs_for_generation(
+        self,
+        input_ids,
+        past_key_values=None,
+        attention_mask=None,
+        inputs_embeds=None,
+        cache_position=None,
+        position_ids=None,
+        use_cache=True,
+        num_logits_to_keep=None,
+        **kwargs,
+    ):
+        # Overwritten: has a special cache type, `HybridCache`
+
+        # If we have cache: let's slice `input_ids` through `cache_position`, to keep only the unprocessed tokens
+        # Exception 1: when passing input_embeds, input_ids may be missing entries
+        # Exception 2: some generation methods do special slicing of input_ids, so we don't need to do it here
+        if past_key_values is not None:
+            if inputs_embeds is not None:  # Exception 1
+                input_ids = input_ids[:, -cache_position.shape[0] :]
+            elif input_ids.shape[1] != cache_position.shape[0]:  # Default case (the "else", a no op, is Exception 2)
+                input_ids = input_ids[:, cache_position]
+        if attention_mask is not None and position_ids is None:
+            # create position_ids on the fly for batch generation
+            position_ids = attention_mask.long().cumsum(-1) - 1
+            position_ids.masked_fill_(attention_mask == 0, 1)
+            if past_key_values:
+                position_ids = position_ids[:, -input_ids.shape[1] :]
+                # This `clone` call is needed to avoid recapturing cuda graphs with `torch.compile`'s
+                # `mode="reduce-overhead`, as otherwise the input `position_ids` would have various stride
+                # during the decoding. Here, simply using `.contiguous()` is not sufficient as in the
+                # batch size = 1 case, `position_ids` is already contiguous but with varying stride
+                # which retriggers a capture.
+                position_ids = position_ids.clone(memory_format=torch.contiguous_format)
+
+        # if `inputs_embeds` are passed, we only want to use them in the 1st generation step
+        if inputs_embeds is not None and cache_position[0] == 0:
+            model_inputs = {"inputs_embeds": inputs_embeds, "input_ids": None}
+        else:
+            # The clone here is for the same reason as for `position_ids`.
+            model_inputs = {"input_ids": input_ids.clone(memory_format=torch.contiguous_format), "inputs_embeds": None}
+
+        if (
+            isinstance(past_key_values, HybridCache)
+            and attention_mask.ndim == 2
+            and not self.config._attn_implementation == "flash_attention_2"
+        ):
+            if model_inputs["inputs_embeds"] is not None:
+                batch_size, sequence_length, _ = model_inputs["inputs_embeds"].shape
+                device = model_inputs["inputs_embeds"].device
+            else:
+                batch_size, sequence_length = model_inputs["input_ids"].shape
+                device = model_inputs["input_ids"].device
+
+            attention_mask = self.model._prepare_4d_causal_attention_mask_with_cache_position(
+                attention_mask,
+                sequence_length=sequence_length,
+                target_length=past_key_values.get_max_cache_shape(),
+                dtype=self.lm_head.weight.dtype,
+                device=device,
+                cache_position=cache_position,
+                batch_size=batch_size,
+            )
+
+        if num_logits_to_keep is not None:
+            model_inputs["num_logits_to_keep"] = num_logits_to_keep
+
+        model_inputs.update(
+            {
+                "position_ids": position_ids,
+                "cache_position": cache_position,
+                "past_key_values": past_key_values,
+                "use_cache": use_cache,
+                "attention_mask": attention_mask,
+            }
+        )
+        return model_inputs
+
+class Gemma2ForInputContrastive(Gemma2PreTrainedModel, GenerationMixin):
+    _tied_weights_keys = ["lm_head.weight"]
+    _tp_plan = {"lm_head": "colwise_rep"}
+
+    def __init__(self, config):
+        super().__init__(config)
+        self.model = Gemma2Model_pruning_ffn(config)
+        self.vocab_size = config.vocab_size
+        self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
+
+        # Initialize weights and apply final processing
+        self.post_init()
+
+    def get_input_embeddings(self):
+        return self.model.embed_tokens
+
+    def set_input_embeddings(self, value):
+        self.model.embed_tokens = value
+
+    def get_output_embeddings(self):
+        return self.lm_head
+
+    def set_output_embeddings(self, new_embeddings):
+        self.lm_head = new_embeddings
+
+    def set_decoder(self, decoder):
+        self.model = decoder
+
+    def get_decoder(self):
+        return self.model
+
+    @add_start_docstrings_to_model_forward(GEMMA2_INPUTS_DOCSTRING)
+    @replace_return_docstrings(output_type=CausalLMOutputWithPast, config_class=_CONFIG_FOR_DOC)
+    def forward(
+        self,
+        rag_input_ids: torch.LongTensor = None,
+        rag_attention_mask: Optional[torch.Tensor] = None,
+        rag_labels: Optional[torch.LongTensor] = None,
+        raw_input_ids: torch.LongTensor = None,
+        raw_attention_mask: Optional[torch.Tensor] = None,
+        raw_labels: Optional[torch.LongTensor] = None,
+        # input_ids: torch.LongTensor = None,
+        # attention_mask: Optional[torch.Tensor] = None,
+        position_ids: Optional[torch.LongTensor] = None,
+        past_key_values: Optional[HybridCache] = None,
+        inputs_embeds: Optional[torch.FloatTensor] = None,
+        # labels: Optional[torch.LongTensor] = None,
+        use_cache: Optional[bool] = None,
+        output_attentions: Optional[bool] = None,
+        output_hidden_states: Optional[bool] = None,
+        return_dict: Optional[bool] = None,
+        cache_position: Optional[torch.LongTensor] = None,
+        num_logits_to_keep: int = 0,
+        **loss_kwargs,
+    ) -> Union[Tuple, CausalLMOutputWithPast]:
+        r"""
+        Args:
+            labels (`torch.LongTensor` of shape `(batch_size, sequence_length)`, *optional*):
+                Labels for computing the masked language modeling loss. Indices should either be in `[0, ...,
+                config.vocab_size]` or -100 (see `input_ids` docstring). Tokens with indices set to `-100` are ignored
+                (masked), the loss is only computed for the tokens with labels in `[0, ..., config.vocab_size]`.
+
+            num_logits_to_keep (`int`, *optional*):
+                Calculate logits for the last `num_logits_to_keep` tokens. If `0`, calculate logits for all
+                `input_ids` (special case). Only last token logits are needed for generation, and calculating them only for that
+                token can save memory, which becomes pretty significant for long sequences or large vocabulary size.
+
+        Returns:
+
+        Example:
+
+        ```python
+        >>> from transformers import AutoTokenizer, GemmaForCausalLM
+
+        >>> model = GemmaForCausalLM.from_pretrained("google/gemma-2-9b")
+        >>> tokenizer = AutoTokenizer.from_pretrained("google/gemma-2-9b")
+
+        >>> prompt = "What is your favorite condiment?"
+        >>> inputs = tokenizer(prompt, return_tensors="pt")
+
+        >>> # Generate
+        >>> generate_ids = model.generate(inputs.input_ids, max_length=30)
+        >>> tokenizer.batch_decode(generate_ids, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
+        "What is your favorite condiment?"
+        ```"""
+
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+
+        rag_outputs = self.model(
+            rag_input_ids,
+            attention_mask=rag_attention_mask,
+            position_ids=position_ids,
+            past_key_values=past_key_values,
+            inputs_embeds=inputs_embeds,
+            use_cache=use_cache,
+            # output_attentions=output_attentions,
+            # output_hidden_states=output_hidden_states,
+            return_dict=return_dict,
+            cache_position=cache_position,
+            **loss_kwargs
+        )
+        raw_outputs = self.model(
+                # input_ids=raw_input_ids,
+                raw_input_ids,
+                attention_mask=raw_attention_mask,
+                position_ids=position_ids,
+                past_key_values=past_key_values,
+                inputs_embeds=inputs_embeds,
+                use_cache=use_cache,
+                # output_attentions=output_attentions,
+                # output_hidden_states=output_hidden_states,
+                return_dict=return_dict,
+                cache_position=cache_position,
+                **loss_kwargs
+            )
+
+        rag_hidden_states = rag_outputs[0]
+        rag_logits = self.lm_head(rag_hidden_states[:, -num_logits_to_keep:, :])
+        rag_loss = None
+        if rag_labels is not None:
+            rag_loss = self.loss_function(logits=rag_logits, labels=rag_labels, vocab_size=self.config.vocab_size, **kwargs)
+        raw_hidden_states = raw_outputs[0]
+        raw_logits = self.lm_head(raw_hidden_states[:, -num_logits_to_keep:, :])
+        raw_loss = None
+        if raw_labels is not None:
+            raw_loss = self.loss_function(logits=raw_logits, labels=raw_labels, vocab_size=self.config.vocab_size, **kwargs)
+        alpha = 0.5
+        step = loss_kwargs.get("cur_step", None)
+        total_steps = loss_kwargs.get("total_step", None)
+        cur_step_ratio = step / total_steps
+        margin = (self.initial_margin + (self.final_margin - self.initial_margin) * cur_step_ratio) * raw_input_ids.shape[0]
+        contrastive_loss = torch.relu(rag_loss - raw_loss + margin)
+        loss = alpha * contrastive_loss + (1-alpha) * rag_loss
+
+        return InputContrastiveOutputWithPast(
+            loss = loss,
+            rag_loss=rag_loss,
+            rag_logits=rag_logits,
+            rag_past_key_values=rag_outputs.past_key_values,
+            rag_hidden_states=rag_outputs.hidden_states,
+            rag_attentions=rag_outputs.attentions,
+            raw_loss=raw_loss,
+            raw_logits=raw_logits,
+            raw_past_key_values=raw_outputs.past_key_values,
+            raw_hidden_states=raw_outputs.hidden_states,
+            raw_attentions=raw_outputs.attentions,
+            metrics={
+                'contrastive_loss': contrastive_loss.detach(),
+                'rag_loss': rag_loss.detach(),
+                'raw_loss': raw_loss.detach(),
+                'margin': margin,
+            }
+        )
+
+        # if self.training and self.config._attn_implementation != "eager":
+        #     logger.warning_once(
+        #         "It is strongly recommended to train Gemma2 models with the `eager` attention implementation "
+        #         f"instead of `{self.config._attn_implementation}`. Use `eager` with `AutoModelForCausalLM.from_pretrained('<path-to-checkpoint>', attn_implementation='eager')`."
+        #     )
+        # output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
+        # output_hidden_states = (
+        #     output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
+        # )
+        # return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        # # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
+        # outputs = self.model(
+        #     input_ids=input_ids,
+        #     attention_mask=attention_mask,
+        #     position_ids=position_ids,
+        #     past_key_values=past_key_values,
+        #     inputs_embeds=inputs_embeds,
+        #     use_cache=use_cache,
+        #     output_attentions=output_attentions,
+        #     output_hidden_states=output_hidden_states,
+        #     return_dict=return_dict,
+        #     cache_position=cache_position,
+        # )
+
+        # hidden_states = outputs[0]
+        # # Only compute necessary logits, and do not upcast them to float if we are not computing the loss
+        # logits = self.lm_head(hidden_states[:, -num_logits_to_keep:, :])
+        # if self.config.final_logit_softcapping is not None:
+        #     logits = logits / self.config.final_logit_softcapping
+        #     logits = torch.tanh(logits)
+        #     logits = logits * self.config.final_logit_softcapping
+
+        # loss = None
+        # if labels is not None:
+        #     loss = self.loss_function(logits, labels, self.vocab_size, **loss_kwargs)
+
+        # if not return_dict:
+        #     output = (logits,) + outputs[1:]
+        #     return (loss,) + output if loss is not None else output
+
+        # return CausalLMOutputWithPast(
+        #     loss=loss,
+        #     logits=logits,
+        #     past_key_values=outputs.past_key_values,
+        #     hidden_states=outputs.hidden_states,
+        #     attentions=outputs.attentions,
+        # )
+
+    def prepare_inputs_for_generation(
+        self,
+        input_ids,
+        past_key_values=None,
+        attention_mask=None,
+        inputs_embeds=None,
+        cache_position=None,
+        position_ids=None,
+        use_cache=True,
+        num_logits_to_keep=None,
+        **kwargs,
+    ):
+        # Overwritten: has a special cache type, `HybridCache`
+
+        # If we have cache: let's slice `input_ids` through `cache_position`, to keep only the unprocessed tokens
+        # Exception 1: when passing input_embeds, input_ids may be missing entries
+        # Exception 2: some generation methods do special slicing of input_ids, so we don't need to do it here
+        if past_key_values is not None:
+            if inputs_embeds is not None:  # Exception 1
+                input_ids = input_ids[:, -cache_position.shape[0] :]
+            elif input_ids.shape[1] != cache_position.shape[0]:  # Default case (the "else", a no op, is Exception 2)
+                input_ids = input_ids[:, cache_position]
+        if attention_mask is not None and position_ids is None:
+            # create position_ids on the fly for batch generation
+            position_ids = attention_mask.long().cumsum(-1) - 1
+            position_ids.masked_fill_(attention_mask == 0, 1)
+            if past_key_values:
+                position_ids = position_ids[:, -input_ids.shape[1] :]
+                # This `clone` call is needed to avoid recapturing cuda graphs with `torch.compile`'s
+                # `mode="reduce-overhead`, as otherwise the input `position_ids` would have various stride
+                # during the decoding. Here, simply using `.contiguous()` is not sufficient as in the
+                # batch size = 1 case, `position_ids` is already contiguous but with varying stride
+                # which retriggers a capture.
+                position_ids = position_ids.clone(memory_format=torch.contiguous_format)
+
+        # if `inputs_embeds` are passed, we only want to use them in the 1st generation step
+        if inputs_embeds is not None and cache_position[0] == 0:
+            model_inputs = {"inputs_embeds": inputs_embeds, "input_ids": None}
+        else:
+            # The clone here is for the same reason as for `position_ids`.
+            model_inputs = {"input_ids": input_ids.clone(memory_format=torch.contiguous_format), "inputs_embeds": None}
+
+        if (
+            isinstance(past_key_values, HybridCache)
+            and attention_mask.ndim == 2
+            and not self.config._attn_implementation == "flash_attention_2"
+        ):
+            if model_inputs["inputs_embeds"] is not None:
+                batch_size, sequence_length, _ = model_inputs["inputs_embeds"].shape
+                device = model_inputs["inputs_embeds"].device
+            else:
+                batch_size, sequence_length = model_inputs["input_ids"].shape
+                device = model_inputs["input_ids"].device
+
+            attention_mask = self.model._prepare_4d_causal_attention_mask_with_cache_position(
+                attention_mask,
+                sequence_length=sequence_length,
+                target_length=past_key_values.get_max_cache_shape(),
+                dtype=self.lm_head.weight.dtype,
+                device=device,
+                cache_position=cache_position,
+                batch_size=batch_size,
+            )
+
+        if num_logits_to_keep is not None:
+            model_inputs["num_logits_to_keep"] = num_logits_to_keep
+
+        model_inputs.update(
+            {
+                "position_ids": position_ids,
+                "cache_position": cache_position,
+                "past_key_values": past_key_values,
+                "use_cache": use_cache,
+                "attention_mask": attention_mask,
+            }
+        )
+        return model_inputs
+
 
 
 @add_start_docstrings(
