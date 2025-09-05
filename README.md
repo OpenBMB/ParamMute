@@ -35,16 +35,16 @@
 <p align="center" dir="auto">
 
 • 🎉 [News](#-News) 
-• 🎯 [Introduction](#-introduction) 
-• ⚡ [ParamMute Pipeline](#-Quickstart) 
-• 📃 [Evaluation](#%EF%B8%8F-usage-instructions)
+• 🎯 [Introduction](#-1-introduction) 
+• ⚡ [ParamMute Pipeline](#-2-parammute-pipeline) 
+• 📃 [Evaluation](#-3-evaluation)
 
 </p>
 <p align="center" dir="auto">
 
-• 🛫 [Usage](#-setup)
-• 📝 [Citation](#-citation)
-• 📨 [Contact](#-contact)
+• 🛫 [Usage](#-4-usage)
+• 📝 [Citation](#-5-citation)
+• 📨 [Contact](#-6-contact)
 </p>
 </div>
 
