@@ -19,14 +19,14 @@
   <a href="https://arxiv.org/pdf/2502.15543" alt="Paper">
     <img src="https://img.shields.io/badge/Paper-ParamMute-B31B1B?logo=arxiv&logoColor=white"/>
   </a>
-  <a href="https://huggingface.co/papers/2502.15543" alt="HuggingFace Paper">
-    <img src="https://img.shields.io/badge/Daily Papers-ParamMute-yellow?logo=huggingface"/>
-  </a>
   <a href="https://huggingface.co/collections/chengpingan/parammute-68b9860451cba86b6cb41060" alt="Collectionss">
     <img src="https://img.shields.io/badge/Collectionss-ParamMute-yellowgreen?logo=huggingface"/>
   </a>
   <a href="https://huggingface.co/datasets/chengpingan/CoConflictQA" alt="Dataset">
     <img src="https://img.shields.io/badge/Benchmark-CoConflictQA-important"/>
+  </a>
+   <a href="https://www.xiaohongshu.com/discovery/item/67bd62310000000007035063?source=webshare&xhsshare=pc_web&xsec_token=AB_YALZBY2vCXkokJeEkLoZOR49BzvLu7LAfWNIKMqZZo=&xsec_source=pc_share" alt="Xiaohongshu">
+    <img src="https://img.shields.io/badge/Xiaohongshu-ParamMute-red?logo=xiaohongshu"/>
   </a>
 </p>
 
