@@ -50,6 +50,7 @@
 
 # 🎉 News
 
+* 20250919: Our paper has been **accepted to NeurIPS 2025** ! Congratulations! 🎉
 * 20250615: Our work received the **Highlight Poster Award🏆** at YSSNLP 2025 ! Congratulations! 🎉
 * 20250529: We updated our paper on [Paper](https://arxiv.org/abs/2502.15543).
 * 20250226: Released our [train data](https://huggingface.co/datasets/chengpingan/pip-kag-train) and [test data](https://huggingface.co/datasets/chengpingan/CoConflictQA) on Hugging Face.
