@@ -1,6 +1,6 @@
-cd ../../src/2_install
+cd ../../src/2_tuning
 
-CUDA_VISIBLE_DEVICES=0 python3 pip_install.py \
+CUDA_VISIBLE_DEVICES=0 python3 train.py \
     --model_name_or_path $path of pruned model$ \
     --train_file $path oftraining data$ \
     --max_len 1024 \
