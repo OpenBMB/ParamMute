@@ -6,6 +6,34 @@ import gc
 import matplotlib.pyplot as plt
 from collections import defaultdict
 from matplotlib.patches import Patch  
+import argparse
+
+def get_args():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--in_file_path",
+        type=str,
+        required=True,
+        help="input data path"
+    )
+
+    parser.add_argument(
+        "--visualize_path",
+        type=str,
+        required=True,
+        help="visualize result path"
+    )
+
+    parser.add_argument(
+        "--pretrained_model_path",
+        type=str,
+        required=True,
+        help="model path"
+    )
+
+    return parser.parse_args()
+
 
 class ActivationCollector:
     def __init__(self, model, tokenizer, model_type, num_layers, num_neurons, device):
@@ -221,20 +249,23 @@ if __name__ == "__main__":
     import sys
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    args = get_args()
 
-    model_path = sys.argv[1]
-    in_file_path = sys.argv[2]
-    out_file_path = sys.argv[3]
+    in_file_path = args.in_file_path
+    visualize_path = args.visualize_path
+    pretrained_model_path = args.pretrained_model_path
+    
+
     model_type = 'llama3'
 
-    model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=torch.bfloat16, trust_remote_code=True,device_map="balanced")
-    tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+    model = AutoModelForCausalLM.from_pretrained(pretrained_model_path, torch_dtype=torch.bfloat16, trust_remote_code=True,device_map="balanced")
+    tokenizer = AutoTokenizer.from_pretrained(pretrained_model_path, trust_remote_code=True)
     num_layers = model.config.num_hidden_layers
     num_neurons = model.config.intermediate_size
 
     collector = ActivationCollector(model, tokenizer, model_type, num_layers, num_neurons, device)
 
     res_data = collector.evaluate_per_example(in_file_path)
-    draw_pic(res_data, num_layers, num_neurons, out_file_path)
+    draw_pic(res_data, num_layers, num_neurons, visualize_path)
     
    
