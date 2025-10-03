@@ -127,8 +127,8 @@ Based on the visualization results, we select the Top-K layers exhibiting the la
 After identifying the UA-FFNs, we can train the LLMs while suppressing these UA-FFNs to achieve optimal faithful knowledge adaptation using the following scripts: 
 
 ```
-cd scripts
-bash 2_tuning/tune.sh
+cd scripts/2_tuning
+bash tune.sh
 ```
 **Key parameters include:**
 
@@ -148,8 +148,8 @@ bash 2_tuning/tune.sh
 ## 📃 3. Evaluation
 For any model, you can perform inference using the script located at `scripts/Evaluation/evaluate.sh`.
 ```
-cd scripts
-bash Evaluation/evaluate.sh
+cd scripts/Evaluation
+bash evaluate.sh
 ```
 **Key parameters include:**
 
