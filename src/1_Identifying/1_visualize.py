@@ -192,8 +192,11 @@ def draw_pic(all_datas, num_layers, num_neurons, save_path):
     x = list(range(0, len(right_ww_list) ))
     diff_list = [(w - r)*10 for w, r in zip(wrong_ww_list, right_ww_list)]
     plt.figure(figsize=(10,6))
+    print(f'Unfaithful acctivations:')
     print([f"{x:.4f}" for x in wrong_ww_list])
+    print(f'Faithful acctivations:')
     print([f"{x:.4f}" for x in right_ww_list])
+    print(f'Difference acctivations:')
     print([f"{x:.4f}" for x in diff_list])
     colors = ['#c6dbef'] * num_layers
     plt.bar(x, diff_list, color=colors, width=0.6,edgecolor='#6baed6', linewidth=0.7)

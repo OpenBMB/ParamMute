@@ -3,12 +3,9 @@
 # Make sure your work dir in /PIP-KAG/scripts/1_pip_uninstall
 cd ../../src/1_Identifying
 
-
-CUDA_VISIVLE_DEVICES=0 python3 1_visualize.py \
-    --in_file_path ../../data/func_data/draw_acctivations_shuf1k.jsonl \
-    --visualize_path $visualize_res.png$ \
-    --pretrained_model_path $path of the pretrained model$
-
+echo "================================="
+echo "🚀  Start running 1_visualize.py"
+echo "================================="
 # The input file (in_file_path) must be in JSONL format.
 # Each line corresponds to one data instance, with the following structure:
 # {
@@ -18,3 +15,13 @@ CUDA_VISIVLE_DEVICES=0 python3 1_visualize.py \
 #   "prompt_w_context": "The exact prompt shown to the model, including the context.",
 #   "is_faithful": "A label indicating whether the model’s answer is faithful to the provided context."
 # }
+
+# CUDA_VISIBLE_DEVICES=0 python3 1_visualize.py \
+#     --in_file_path ../../data/func_data/draw_acctivations_shuf1k.jsonl \
+#     --visualize_path $visualize_res.png$ \
+#     --pretrained_model_path $path of the pretrained model$
+
+CUDA_VISIBLE_DEVICES=1 python3 1_visualize.py \
+  --in_file_path "/home/yyk/yyk06/hpc/projects/pip_nips/opensrc/ParamMute/data/func_data/draw_acctivations_shuf1k.jsonl" \
+  --visualize_path "/home/yyk/yyk06/hpc/projects/pip_nips/opensrc/out/res.png" \
+  --pretrained_model_path "/home/yyk/yyk06/hpc/llama3-8b-instruct"

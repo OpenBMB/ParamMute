@@ -83,7 +83,6 @@ jsonlines
 rouge
 datasets
 tensorboardX
-trl==0.12.2
 vllm==0.6.6.post1
 accelerate==1.3.0
 deepspeed==0.16.3
@@ -110,8 +109,8 @@ test/
 First, we visualize the activation differences between faithful and unfaithful responses, and select the Top-K layers with the largest differences as Unfaithfulness-Associated FFNs (UA-FFNs). Our analysis in paper(§2.) shows that the over-activation of these FFNs is causally and strongly correlated with the model's unfaithful generations.
 
 ```
-cd scripts
-bash 1_Identifying/1_visualize.sh
+cd scripts/1_Identifying
+bash 1_visualize.sh
 ```
 Running the commands above will generate the visualization results. (You can find more figures for different models in the /assets directory)
 ![method](assets/activations_llama3_8b_instruct.png)
@@ -219,5 +218,6 @@ If you find this work useful, please cite our paper and give us a shining star �
 ## 📨 6. Contact
 If you have questions, suggestions, and bug reports, please email:
 ```
-hpc1449181552@outlook.com
+pengcheng.neu@outlook.com
 ```
+If your issue does not receive a timely response, you are welcome to reach out via email.
