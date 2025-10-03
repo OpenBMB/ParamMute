@@ -125,7 +125,7 @@ class ActivationCollector:
                 cnt +=1 
                 cur_context = data['context']
                 cur_question = data['question']
-                cur_output = data['parametric_answer']
+                cur_output = data['pred']
         
                 cur_input_w_context = data['prompt_w_context']
 
@@ -180,10 +180,10 @@ def draw_pic(all_datas, num_layers, num_neurons, save_path):
         valid_len += 1
         cur_ww_list = data['activations_avg']['ww']
     
-        if data['is_parametric_answer_right'] == 0:
+        if data['is_faithful'] == 0:
             wrong_len += 1
             wrong_ww_list = list_add(cur_ww_list, wrong_ww_list)
-        elif data['is_parametric_answer_right'] == 1:
+        elif data['is_faithful'] == 1:
             right_len += 1
             right_ww_list = list_add(cur_ww_list, right_ww_list)
             
