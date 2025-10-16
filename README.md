@@ -146,7 +146,6 @@ bash tune.sh
 ## 📃 3. Evaluation
 For any model, you can perform inference using the script located at `scripts/Evaluation/evaluate.sh`.
 ```
-cd scripts/Evaluation
 bash evaluate.sh
 ```
 **Key parameters include:**
