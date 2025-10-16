@@ -17,7 +17,7 @@ deepspeed --include localhost:0,1,2,3 train.py \
     --output_dir $path of output_dir$ \
     --train_mode input_contrastive \
     --use_lora True \
-    --model_type llama3_pruning_ffn_input_contrastive \
+    --model_type LlamaForInputContrastivew_act_inhibit \
     --report_to tensorboard \
     --logging_dir $path of logs$ \
     --logging_steps 1 \
