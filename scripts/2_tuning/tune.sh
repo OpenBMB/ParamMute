@@ -1,6 +1,6 @@
-cd ../../src/2_tuning
+cd ./src/2_tuning
 
-CUDA_VISIBLE_DEVICES=0 python3 train.py \
+deepspeed --include localhost:0,1,2,3 train.py \
     --model_name_or_path $path of pruned model$ \
     --train_file $path oftraining data$ \
     --max_len 1024 \
@@ -22,4 +22,7 @@ CUDA_VISIBLE_DEVICES=0 python3 train.py \
     --logging_dir $path of logs$ \
     --logging_steps 1 \
     --initial_margin 1 \
-    --final_margin 3
+    --final_margin 3 \
+    --deepspeed $ds_config_path \
+    --inhibit_strength 0 \
+    --inhibit_layer_list 21 22 23 24 25

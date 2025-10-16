@@ -109,7 +109,6 @@ test/
 First, we visualize the activation differences between faithful and unfaithful responses, and select the Top-K layers with the largest differences as Unfaithfulness-Associated FFNs (UA-FFNs). Our analysis in paper(§2.) shows that the over-activation of these FFNs is causally and strongly correlated with the model's unfaithful generations.
 
 ```
-cd scripts/1_Identifying
 bash 1_visualize.sh
 ```
 Running the commands above will generate the visualization results. (You can find more figures for different models in the /assets directory)
@@ -127,7 +126,6 @@ Based on the visualization results, we select the Top-K layers exhibiting the la
 After identifying the UA-FFNs, we can train the LLMs while suppressing these UA-FFNs to achieve optimal faithful knowledge adaptation using the following scripts: 
 
 ```
-cd scripts/2_tuning
 bash tune.sh
 ```
 **Key parameters include:**

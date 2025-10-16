@@ -36,9 +36,8 @@
 # done
 
 
-cd ../../src/3_evaluate/
-to_ex_path=eval_CoConflictQA.py
-eval_files="../../data/CoConflictQA/test"
+to_ex_path=./src/3_evaluate/eval_CoFaithfulQA.py
+eval_files="./data/CoConflictQA/test"
 to_eval_model=$1
 output_dir=$2
 device=$3
@@ -69,6 +68,6 @@ do
         --use_chat_template $use_chat_template \
         --max_new_tokens $max_new_tokens \
         --act_inhibit_ratio $act_inhibit_ratio \
-        --act_inhibit_layer_list 19 20 21 22 23 24 25 26
+        --act_inhibit_layer_list 21 22 23 24 25 26
    
 done

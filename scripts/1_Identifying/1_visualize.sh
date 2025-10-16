@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Make sure your work dir in /PIP-KAG/scripts/1_pip_uninstall
-cd ../../src/1_Identifying
 
 echo "================================="
 echo "🚀  Start running 1_visualize.py"
@@ -16,7 +15,12 @@ echo "================================="
 #   "is_faithful": "A label indicating whether the model’s answer is faithful to the provided context."
 # }
 
-CUDA_VISIBLE_DEVICES=0 python3 1_visualize.py \
-    --in_file_path ../../data/func_data/draw_acctivations_shuf1k.jsonl \
-    --visualize_path $visualize_res.png$ \
-    --pretrained_model_path $path of the pretrained model$
+CUDA_VISIBLE_DEVICES=0 python3 ./src/1_Identifying/1_visualize.py \
+    --in_file_path ./data/func_data/draw_acctivations_shuf1k.jsonl \
+    --visualize_path ./data/func_data/draw_acctivations_shuf1k_act.png \
+    --pretrained_model_path $your_model_path
+
+# CUDA_VISIBLE_DEVICES=0 python3 1_visualize.py \
+#     --in_file_path ./data/func_data/draw_acctivations_shuf1k.jsonl \
+#     --visualize_path $visualize_res.png$ \
+#     --pretrained_model_path $path of the pretrained model$

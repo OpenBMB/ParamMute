@@ -56,7 +56,7 @@ def load_model_and_tokenizer(model_args, training_args):
                     trust_remote_code=True,
                     inhibit_strength= training_args.inhibit_strength,
                     inhibit_layer_list= training_args.inhibit_layer_list,
-            )
+            )            
         elif training_args.model_type == 'LlamaForInputContrastivew_act_inhibit':
             config = AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
             config.architectures= ['LlamaForInputContrastivew_act_inhibit'] 
@@ -97,6 +97,5 @@ def load_model_and_tokenizer(model_args, training_args):
     else:
         raise ValueError(f'train_mode {training_args.train_mode} not supported')
     
-
     return model, tokenizer
 

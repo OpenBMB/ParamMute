@@ -152,6 +152,9 @@ class InputContrastiveTrainer(Trainer):
         current_step = self.state.global_step
         inputs['cur_step'] = current_step
         inputs['total_step'] = total_steps
+
+        # import pdb
+        # pdb.set_trace()
         outputs = model(**inputs)
 
         # Save past state if it exists
@@ -193,8 +196,8 @@ class InputContrastiveTrainer(Trainer):
                     combined_metrics[metric_name] = metric_value
                 else:
                     combined_metrics[metric_name] = metric_value.mean().item()
-            # 一次性记录所有指标
-            self.log(combined_metrics)
+        #     # 一次性记录所有指标
+            # self.log(combined_metrics)
         ##################################################################################  
             
         if self.args.average_tokens_across_devices and self.model_accepts_loss_kwargs:
