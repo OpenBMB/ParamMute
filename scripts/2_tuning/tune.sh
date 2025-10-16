@@ -1,10 +1,11 @@
 cd ./src/2_tuning
 
+# total bach=32，using ckpt 2100
 deepspeed --include localhost:0,1,2,3 train.py \
     --model_name_or_path $path of pruned model$ \
     --train_file $path oftraining data$ \
     --max_len 1024 \
-    --per_device_train_batch_size 4 \
+    --per_device_train_batch_size 1 \
     --gradient_accumulation_steps 8 \
     --save_steps 300 \
     --lr_scheduler_type cosine \
