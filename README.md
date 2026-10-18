@@ -5,6 +5,10 @@
 
 # ParamMute: Suppressing Knowledge-Critical FFNs for Faithful Retrieval-Augmented Generation
 
+<p align="center">
+  <a href="https://passionate11.github.io/">Pengcheng Huang</a>, <a href="http://faculty.neu.edu.cn/liuzhenghao/zh_CN/index.htm">Zhenghao Liu</a>, Yukun Yan, Haiyan Zhao, Xiaoyuan Yi, Hao Chen, Zhiyuan Liu, Maosong Sun, <a href="http://team.neu.edu.cn/NEUNLPLab/zh_CN/article/411756/content/2225.htm">Tong Xiao</a>, Ge Yu, Chenyan Xiong
+</p>
+
 <!-- <p align="center">
 [![GitHub](https://img.shields.io/badge/GitHub-PIP--KAG-black?logo=github)](https://github.com/OpenBMB/PIP-KAG)
 [![arXiv](https://img.shields.io/badge/Paper-PIP--KAG-B31B1B?logo=arxiv&logoColor=white)](https://arxiv.org/pdf/2502.15543)
