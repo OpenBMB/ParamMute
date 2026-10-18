@@ -23,6 +23,15 @@
   <a href="https://arxiv.org/pdf/2502.15543" alt="Paper">
     <img src="https://img.shields.io/badge/Paper-ParamMute-B31B1B?logo=arxiv&logoColor=white"/>
   </a>
+  <a href="https://openreview.net/forum?id=CyUq9D99vE" alt="NeurIPS 2025">
+    <img src="https://img.shields.io/badge/NeurIPS-2025-8c1b13"/>
+  </a>
+  <a href="https://passionate11.github.io/ParamMute-project-page/" alt="Project Page">
+    <img src="https://img.shields.io/badge/Project-Page-4f46e5?logo=githubpages&logoColor=white"/>
+  </a>
+  <a href="https://huggingface.co/papers/2502.15543" alt="HF Paper">
+    <img src="https://img.shields.io/badge/HF%20Paper-ParamMute-yellow?logo=huggingface"/>
+  </a>
   <a href="https://huggingface.co/collections/chengpingan/parammute-68b9860451cba86b6cb41060" alt="Collectionss">
     <img src="https://img.shields.io/badge/Collectionss-ParamMute-yellowgreen?logo=huggingface"/>
   </a>
@@ -63,6 +72,10 @@
 
 
 ## 🎯 1. Introduction
+
+**ParamMute** (NeurIPS 2025) makes retrieval-augmented LLMs more faithful to retrieved evidence by suppressing the mid-to-deep FFN layers that over-activate when a model ignores the context in favor of its parametric memory, raising average context recall over vanilla RAG by **+6.17 on CoFaithfulQA** (released as [CoConflictQA](https://huggingface.co/datasets/chengpingan/CoConflictQA)) and **+54.63 on ConFiQA**.
+
+> **Also known as PIP-KAG.** Earlier arXiv versions of [2502.15543](https://arxiv.org/abs/2502.15543v1) were titled "PIP-KAG: Mitigating Knowledge Conflicts in Knowledge-Augmented Generation via Parametric Pruning". The NeurIPS 2025 version is the same work under its final name; please cite the NeurIPS 2025 version below.
 
 We investigate the internal mechanisms behind unfaithful generation and identify a subset of **mid-to-deep (70%–90% relative depth range) FFNs** that are disproportionately activated in such cases. Building on this insight, we propose Parametric Knowledge Muting through FFN Suppression (**ParamMute**), a framework that improves contextual faithfulness by suppressing the activation of unfaithfulness-associated FFNs and calibrating the model toward retrieved knowledge. Experimental results on CoConflictQA and ConFiQA demonstrate that ParamMute significantly reduces knowledge conflicts and improves context fidelity.
 
@@ -205,14 +218,12 @@ print(decoded)
 ## 📝 5. Citation
 If you find this work useful, please cite our paper and give us a shining star 🌟
 ```
-@misc{huang2025parammutesuppressingknowledgecriticalffns,
-      title={ParamMute: Suppressing Knowledge-Critical FFNs for Faithful Retrieval-Augmented Generation}, 
-      author={Pengcheng Huang and Zhenghao Liu and Yukun Yan and Haiyan Zhao and Xiaoyuan Yi and Hao Chen and Zhiyuan Liu and Maosong Sun and Tong Xiao and Ge Yu and Chenyan Xiong},
-      year={2025},
-      eprint={2502.15543},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2502.15543}, 
+@inproceedings{huang2025parammute,
+  title     = {{ParamMute}: Suppressing Knowledge-Critical {FFN}s for Faithful Retrieval-Augmented Generation},
+  author    = {Huang, Pengcheng and Liu, Zhenghao and Yan, Yukun and Zhao, Haiyan and Yi, Xiaoyuan and Chen, Hao and Liu, Zhiyuan and Sun, Maosong and Xiao, Tong and Yu, Ge and Xiong, Chenyan},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2025},
+  url       = {https://openreview.net/forum?id=CyUq9D99vE}
 }
 ```
 
