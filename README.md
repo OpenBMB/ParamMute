@@ -14,7 +14,7 @@
 [![arXiv](https://img.shields.io/badge/Paper-PIP--KAG-B31B1B?logo=arxiv&logoColor=white)](https://arxiv.org/pdf/2502.15543)
 [![PIP-KAG](https://img.shields.io/badge/HuggingFace-PIP--KAG-yellow?logo=huggingface)](https://huggingface.co/papers/2502.15543)
 [![HuggingFace](https://img.shields.io/badge/Model-PIP--KAG--7B-yellowgreen)](https://huggingface.co/chengpingan/ParamMute-7B)
-[![HuggingFace](https://img.shields.io/badge/Dataset-CoConflictQA-important)](https://huggingface.co/datasets/chengpingan/CoConflictQA)
+[![HuggingFace](https://img.shields.io/badge/Dataset-CoFaithfulQA-important)](https://huggingface.co/datasets/chengpingan/CoFaithfulQA)
 </p> -->
 <p align="center">
   <a href="https://github.com/OpenBMB/ParamMute" alt="GitHub">
@@ -35,8 +35,8 @@
   <a href="https://huggingface.co/collections/chengpingan/parammute-68b9860451cba86b6cb41060" alt="Collectionss">
     <img src="https://img.shields.io/badge/Collectionss-ParamMute-yellowgreen?logo=huggingface"/>
   </a>
-  <a href="https://huggingface.co/datasets/chengpingan/CoConflictQA" alt="Dataset">
-    <img src="https://img.shields.io/badge/Benchmark-CoConflictQA-important"/>
+  <a href="https://huggingface.co/datasets/chengpingan/CoFaithfulQA" alt="Dataset">
+    <img src="https://img.shields.io/badge/Benchmark-CoFaithfulQA-important"/>
   </a>
    <a href="https://www.xiaohongshu.com/discovery/item/67bd62310000000007035063?source=webshare&xhsshare=pc_web&xsec_token=AB_YALZBY2vCXkokJeEkLoZOR49BzvLu7LAfWNIKMqZZo=&xsec_source=pc_share" alt="Xiaohongshu">
     <img src="https://img.shields.io/badge/Xiaohongshu-ParamMute-red?logo=xiaohongshu"/>
@@ -66,18 +66,18 @@
 * 20250919: Our paper has been **accepted to NeurIPS 2025** ! Congratulations! 🎉
 * 20250615: Our work received the **Highlight Poster Award🏆** at YSSNLP 2025 ! Congratulations! 🎉
 * 20250529: We updated our paper on [Paper](https://arxiv.org/abs/2502.15543).
-* 20250226: Released our [train data](https://huggingface.co/datasets/chengpingan/pip-kag-train) and [test data](https://huggingface.co/datasets/chengpingan/CoConflictQA) on Hugging Face.
+* 20250226: Released our [train data](https://huggingface.co/datasets/chengpingan/pip-kag-train) and [test data](https://huggingface.co/datasets/chengpingan/CoFaithfulQA) on Hugging Face.
 * 20250219: Released our [Paper](https://arxiv.org/abs/2502.15543) on arXiv. Released our [Model](https://huggingface.co/chengpingan/ParamMute-7B) on Hugging Face. Released our [Code](https://github.com/OpenBMB/ParamMute) on GitHub.
 
 
 
 ## 🎯 1. Introduction
 
-**ParamMute** (NeurIPS 2025) makes retrieval-augmented LLMs more faithful to retrieved evidence by suppressing the mid-to-deep FFN layers that over-activate when a model ignores the context in favor of its parametric memory, raising average context recall over vanilla RAG by **+6.17 on CoFaithfulQA** (released as [CoConflictQA](https://huggingface.co/datasets/chengpingan/CoConflictQA)) and **+54.63 on ConFiQA**.
+**ParamMute** (NeurIPS 2025) makes retrieval-augmented LLMs more faithful to retrieved evidence by suppressing the mid-to-deep FFN layers that over-activate when a model ignores the context in favor of its parametric memory, raising average context recall over vanilla RAG by **+6.17 on [CoFaithfulQA](https://huggingface.co/datasets/chengpingan/CoFaithfulQA)** and **+54.63 on ConFiQA**.
 
 > **Also known as PIP-KAG.** Earlier arXiv versions of [2502.15543](https://arxiv.org/abs/2502.15543v1) were titled "PIP-KAG: Mitigating Knowledge Conflicts in Knowledge-Augmented Generation via Parametric Pruning". The NeurIPS 2025 version is the same work under its final name; please cite the NeurIPS 2025 version below.
 
-We investigate the internal mechanisms behind unfaithful generation and identify a subset of **mid-to-deep (70%–90% relative depth range) FFNs** that are disproportionately activated in such cases. Building on this insight, we propose Parametric Knowledge Muting through FFN Suppression (**ParamMute**), a framework that improves contextual faithfulness by suppressing the activation of unfaithfulness-associated FFNs and calibrating the model toward retrieved knowledge. Experimental results on CoConflictQA and ConFiQA demonstrate that ParamMute significantly reduces knowledge conflicts and improves context fidelity.
+We investigate the internal mechanisms behind unfaithful generation and identify a subset of **mid-to-deep (70%–90% relative depth range) FFNs** that are disproportionately activated in such cases. Building on this insight, we propose Parametric Knowledge Muting through FFN Suppression (**ParamMute**), a framework that improves contextual faithfulness by suppressing the activation of unfaithfulness-associated FFNs and calibrating the model toward retrieved knowledge. Experimental results on CoFaithfulQA and ConFiQA demonstrate that ParamMute significantly reduces knowledge conflicts and improves context fidelity.
 
 <!-- ![method](assets/overall_00.png) -->
 
@@ -112,7 +112,7 @@ pip install -e .
 ```
 
 ### 2.1.2. Download the necessary resources:
-The  testing data can be downloaded from [CoConflictQA](https://huggingface.co/datasets/chengpingan/CoConflictQA). After downloading, place the files into the data directory using the following structure:
+The testing data can be downloaded from [CoFaithfulQA](https://huggingface.co/datasets/chengpingan/CoFaithfulQA). (The dataset was previously released on Hugging Face as `chengpingan/CoConflictQA`; the old URL redirects.) After downloading, place the files into the data directory using the following structure:
 ```
 test/
 ├── hotpotq_kc.jsonl     
@@ -181,7 +181,7 @@ Our model and data can be found in Hugging Face collections: [`ParamMute`](https
 |------------------|-----------------------------------------------------|-----------------------------------------------------------|
 | ParamMute-8B-SFT    | Based on LLaMA3-8B-Instruct, trained via supervised fine-tuning (SFT) with activation suppression applied to layers 19–26.  | [🤗ParamMute-8B-SFT](https://huggingface.co/chengpingan/ParamMute-8B-SFT) |
 | ParamMute-8B-KTO    | Based on LLaMA3-8B-Instruct, trained via KTO with activation suppression applied to layers 19–26.  | [🤗ParamMute-8B-KTO](https://huggingface.co/chengpingan/ParamMute-8B-KTO) |
-| CoConflictQA    |  A benchmark specifically designed to evaluate faithfulness in scenarios where the internal knowledge of LLaMA3-8B-Instruct conflicts with accurate external evidence.	  | [🤗CoConflictQA](https://huggingface.co/datasets/chengpingan/CoConflictQA) |
+| CoFaithfulQA    |  A benchmark specifically designed to evaluate faithfulness in scenarios where the internal knowledge of LLaMA3-8B-Instruct conflicts with accurate external evidence.	  | [🤗CoFaithfulQA](https://huggingface.co/datasets/chengpingan/CoFaithfulQA) |
 
 ```
 # Please install src/transformers first!
