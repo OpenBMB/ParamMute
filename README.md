@@ -23,6 +23,9 @@
   <a href="https://arxiv.org/pdf/2502.15543" alt="Paper">
     <img src="https://img.shields.io/badge/Paper-ParamMute-B31B1B?logo=arxiv&logoColor=white"/>
   </a>
+  <a href="https://passionate11.github.io/ParamMute-project-page/" alt="Project Page">
+    <img src="https://img.shields.io/badge/Project-Page-4f46e5?logo=githubpages&logoColor=white"/>
+  </a>
   <a href="https://openreview.net/forum?id=CyUq9D99vE" alt="NeurIPS 2025">
     <img src="https://img.shields.io/badge/NeurIPS-2025-8c1b13"/>
   </a>
