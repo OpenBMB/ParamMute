@@ -1,0 +1,77 @@
+cff-version: 1.2.0
+message: "If you use ParamMute (formerly PIP-KAG) or the CoFaithfulQA benchmark, please cite the NeurIPS 2025 paper below."
+title: "ParamMute: Suppressing Knowledge-Critical FFNs for Faithful Retrieval-Augmented Generation"
+type: software
+repository-code: "https://github.com/OpenBMB/ParamMute"
+url: "https://passionate11.github.io/ParamMute-project-page/"
+keywords:
+  - ParamMute
+  - PIP-KAG
+  - CoFaithfulQA
+  - retrieval-augmented generation
+  - knowledge conflicts
+  - faithfulness
+authors:
+  - family-names: Huang
+    given-names: Pengcheng
+    affiliation: "Northeastern University, China"
+    orcid: "https://orcid.org/0009-0006-1236-5500"
+  - family-names: Liu
+    given-names: Zhenghao
+  - family-names: Yan
+    given-names: Yukun
+  - family-names: Zhao
+    given-names: Haiyan
+  - family-names: Yi
+    given-names: Xiaoyuan
+  - family-names: Chen
+    given-names: Hao
+  - family-names: Liu
+    given-names: Zhiyuan
+  - family-names: Sun
+    given-names: Maosong
+  - family-names: Xiao
+    given-names: Tong
+  - family-names: Yu
+    given-names: Ge
+  - family-names: Xiong
+    given-names: Chenyan
+preferred-citation:
+  type: conference-paper
+  title: "ParamMute: Suppressing Knowledge-Critical FFNs for Faithful Retrieval-Augmented Generation"
+  authors:
+    - family-names: Huang
+      given-names: Pengcheng
+    - family-names: Liu
+      given-names: Zhenghao
+    - family-names: Yan
+      given-names: Yukun
+    - family-names: Zhao
+      given-names: Haiyan
+    - family-names: Yi
+      given-names: Xiaoyuan
+    - family-names: Chen
+      given-names: Hao
+    - family-names: Liu
+      given-names: Zhiyuan
+    - family-names: Sun
+      given-names: Maosong
+    - family-names: Xiao
+      given-names: Tong
+    - family-names: Yu
+      given-names: Ge
+    - family-names: Xiong
+      given-names: Chenyan
+  collection-title: "Advances in Neural Information Processing Systems"
+  conference:
+    name: "NeurIPS 2025"
+  year: 2025
+  doi: "10.52202/085713-3356"
+  url: "https://openreview.net/forum?id=CyUq9D99vE"
+  identifiers:
+    - type: doi
+      value: "10.52202/085713-3356"
+      description: "NeurIPS 2025 proceedings"
+    - type: url
+      value: "https://arxiv.org/abs/2502.15543"
+      description: "arXiv 2502.15543 (v1 titled PIP-KAG)"
