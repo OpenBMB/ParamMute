@@ -23,7 +23,7 @@
   <a href="https://arxiv.org/pdf/2502.15543" alt="Paper">
     <img src="https://img.shields.io/badge/Paper-ParamMute-B31B1B?logo=arxiv&logoColor=white"/>
   </a>
-  <a href="https://openreview.net/forum?id=CyUq9D99vE" alt="NeurIPS 2025">
+  <a href="https://proceedings.neurips.cc/paper_files/paper/2025/hash/90d1e515d74686ad148b469a3cecbbaa-Abstract-Conference.html" alt="NeurIPS 2025">
     <img src="https://img.shields.io/badge/NeurIPS-2025-8c1b13"/>
   </a>
   <a href="https://passionate11.github.io/ParamMute-project-page/" alt="Project Page">
@@ -121,6 +121,8 @@ test/
     ...
 ```
 
+To compare your own RAG model, use the same provided evidence across models and report context recall (ConR), memory recall (MemR), and the memorization ratio (MR) as defined in [Section 5](https://arxiv.org/html/2502.15543v4#S5). The [dataset card](https://huggingface.co/datasets/chengpingan/CoFaithfulQA#load-the-public-evaluation-data) documents the public files and their revision. When reporting results, include which subset and prompt you used.
+
 
 ### 2.2. Identifying Unfaithfulness-Associated FFNs (UA-FFNs)
 First, we visualize the activation differences between faithful and unfaithful responses, and select the Top-K layers with the largest differences as Unfaithfulness-Associated FFNs (UA-FFNs). Our analysis in paper(§2.) shows that the over-activation of these FFNs is causally and strongly correlated with the model's unfaithful generations.
@@ -185,13 +187,13 @@ Our model and data can be found in Hugging Face collections: [`ParamMute`](https
 
 ```
 # Please install src/transformers first!
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 
 model_path = 'your model path'
 
 act_inhibit_ratio = 0.25
 act_inhibit_layer_list=[19,20,21,22,23,24,25,26]
-config = AutoConfig.from_pretrained(model_name, trust_remote_code=True)
+config = AutoConfig.from_pretrained(model_path, trust_remote_code=True)
 config.architectures= ['LlamaForCausalLM_w_act_inhibit']
 model = AutoModelForCausalLM.from_pretrained(model_path,config=config,inhibit_strength=act_inhibit_ratio, inhibit_layer_list=act_inhibit_layer_list)
 tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
@@ -216,14 +218,16 @@ print(decoded)
 
 
 ## 📝 5. Citation
-If you find this work useful, please cite our paper and give us a shining star 🌟
+If you use ParamMute or CoFaithfulQA, cite the [NeurIPS 2025 proceedings version](https://doi.org/10.52202/085713-3356).
 ```
 @inproceedings{huang2025parammute,
   title     = {{ParamMute}: Suppressing Knowledge-Critical {FFN}s for Faithful Retrieval-Augmented Generation},
   author    = {Huang, Pengcheng and Liu, Zhenghao and Yan, Yukun and Zhao, Haiyan and Yi, Xiaoyuan and Chen, Hao and Liu, Zhiyuan and Sun, Maosong and Xiao, Tong and Yu, Ge and Xiong, Chenyan},
   booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {38},
   year      = {2025},
-  url       = {https://openreview.net/forum?id=CyUq9D99vE}
+  doi       = {10.52202/085713-3356},
+  url       = {https://proceedings.neurips.cc/paper_files/paper/2025/hash/90d1e515d74686ad148b469a3cecbbaa-Abstract-Conference.html}
 }
 ```
 
